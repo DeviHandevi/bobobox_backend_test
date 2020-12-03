@@ -67,6 +67,7 @@ def roomsearch(request):
     if (min_total_price == -1) or (room_total_price < min_total_price):
         min_total_price = room_total_price
 
+  num_of_available_room = len(available_rooms)
   search_result = {
     'room_qty': q_room_qty,
     'room_type_id': q_room_type_id,
@@ -74,6 +75,8 @@ def roomsearch(request):
     'checkout_date': q_checkout_date_str,
     'total_price': min_total_price,
     'available_room': available_rooms,
+    'available_room_qty': num_of_available_room if num_of_available_room > int(q_room_qty) \
+      else 'Sorry, we only have ' + str(num_of_available_room) + ' available rooms..',
   }
   return Response(search_result)
   
