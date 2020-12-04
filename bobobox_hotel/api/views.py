@@ -2,10 +2,11 @@ from django.shortcuts import render
 
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from django.db.models import Count
 from .models import Hotel, RoomType, Room, Price, Reservation, Stay, StayRoom, Promo, PromoRule
 
 from datetime import datetime, timedelta
-import json, copy
+import json, copy, math
 
 # Index Page
 @api_view(['GET'])
@@ -137,19 +138,6 @@ def applypromo(request):
         room_date_and_price['date'] = datetime.strptime(room_date_and_price['date'], '%Y-%m-%d')
       room_date_and_price_list.sort(key=lambda x: x['date'])  # sorted by date ASC
       if int(room_date_and_price_list[0]['date'].strftime('%w')) != promo_rule.checkin_day:
-        return Response({
-          'num_of_rooms_booked': num_of_rooms_booked,
-          'promo_rule.min_rooms': promo_rule.min_rooms,
-          'nights_booked': nights_booked,
-          'promo_rule.min_nights': promo_rule.min_nights,
-          'current_date': int(current_date.strftime("%w")),
-          'promo_rule.booking_day': promo_rule.booking_day,
-          'current_time': current_time,
-          'promo_rule.booking_hour_start': promo_rule.booking_hour_start,
-          'promo_rule.booking_hour_end': promo_rule.booking_hour_end,
-          'room_date_and_price_list[0]["date"].strftime("%w")': int(room_date_and_price_list[0]['date'].strftime("%w")),
-          'promo_rule.checkin_day': promo_rule.checkin_day,
-        })
         continue
     # If all valid to rule
     is_promo_valid_for_booking = True
@@ -160,7 +148,45 @@ def applypromo(request):
     return Response({'error': 'No promo rule valid for this request.',})
   
   # Check if the quota is available
-  
+  # Get number of reservation for this promo all time
+  reservation_promo = Reservation.objects.filter(promo_id=promo_id, reserve_date__lt=current_date).aggregate(num=Count('id', distinct=True))
+  number_of_reservation_promo = reservation_promo.get('num', 0)
+
+  # Get number of reservation today
+  reservation_promo_today = Reservation.objects.filter(promo_id=promo_id, reserve_date=current_date)\
+    .aggregate(num=Count('id', distinct=True))
+  number_of_reservation_today = reservation_promo_today.get('num', 0)
+
+  # Get allowed quota for today
+  promo_day_left = (promo.promo_date_end - current_date).days + 1
+  promo_quota_left = promo.quota - number_of_reservation_promo
+  allowed_quota_per_day = math.floor(promo_quota_left / promo_day_left)
+  allowed_quota_today = allowed_quota_per_day - number_of_reservation_today
+  if allowed_quota_today < 1:
+    return Response({'error': 'No promo quota left.',})
+
+  # For debugging
+  # return Response({
+  #   'num_of_rooms_booked': num_of_rooms_booked,
+  #   'promo_rule.min_rooms': promo_rule.min_rooms,
+  #   'nights_booked': nights_booked,
+  #   'promo_rule.min_nights': promo_rule.min_nights,
+  #   'current_date': int(current_date.strftime("%w")),
+  #   'promo_rule.booking_day': promo_rule.booking_day,
+  #   'current_time': current_time,
+  #   'promo_rule.booking_hour_start': promo_rule.booking_hour_start,
+  #   'promo_rule.booking_hour_end': promo_rule.booking_hour_end,
+  #   'room_date_and_price_list[0]["date"].strftime("%w")': int(room_date_and_price_list[0]['date'].strftime("%w")),
+  #   'promo_rule.checkin_day': promo_rule.checkin_day,
+  #   'promo.quota': promo.quota,
+  #   'promo.promo_date_end': promo.promo_date_end,
+  #   'promo.promo_date_start': promo.promo_date_start,
+  #   'promo_day_left': promo_day_left,
+  #   'promo_quota_left': promo_quota_left,
+  #   'number_of_reservation_today': number_of_reservation_today,
+  #   'allowed_quota_per_day': allowed_quota_per_day,
+  #   'allowed_quota_today': allowed_quota_today,
+  # })
 
   # Count discounts
   
