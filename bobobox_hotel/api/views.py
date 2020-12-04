@@ -34,7 +34,7 @@ def roomsearch(request):
   unavailable_room_ids = StayRoom.objects.filter(date__gte=q_checkin_date_str, date__lt=q_checkout_date_str).values_list('room_id', flat=True)
 
   # Get available rooms
-  available_rooms_objs = Room.objects.filter(pk__in=specified_room_ids).exclude(pk__in=unavailable_room_ids)
+  available_rooms_objs = Room.objects.filter(pk__in=specified_room_ids, room_status=True).exclude(pk__in=unavailable_room_ids)
   available_rooms = []
   # For date iteration
   checkin_date = datetime.strptime(q_checkin_date_str, '%Y-%m-%d')
