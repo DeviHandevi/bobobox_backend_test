@@ -6,7 +6,7 @@ from django.db.models import Count
 from .models import Hotel, RoomType, Room, Price, Reservation, Stay, StayRoom, Promo, PromoRule
 
 from datetime import datetime, timedelta
-import json, copy, math
+import json, math
 
 # Index Page
 @api_view(['GET'])
@@ -89,7 +89,6 @@ def applypromo(request):
   # Prepare query parameters
   params_json = request.data.get('params', False)
   params = json.loads(params_json) if params_json else False
-  promo_result = copy.deepcopy(params)
 
   if not params:
     return Response({'error': 'Parameters not found'})
@@ -189,9 +188,22 @@ def applypromo(request):
   # })
 
   # Count discounts
-  
-   
+  total_promo_price = 0
+  total_final_price = params['total_price']
+  for room in rooms:
+    room_date_and_price_list = room.get('price', [])
+    for room_date_and_price in room_date_and_price_list:
+      promo_price = (room_date_and_price['price'] * promo.value) / 100 if promo.promo_type == 2 else promo.value
+      if promo_price > room_date_and_price['price']:
+        promo_price = room_date_and_price['price']
+      room_date_and_price['promo_price'] = int(promo_price)
+      room_date_and_price['final_price'] = int(room_date_and_price['price'] - promo_price)
+      total_promo_price += promo_price
+      # Reformat the date 
+      room_date_and_price['date'] = room_date_and_price['date'].strftime('%Y-%m-%d')
+  total_final_price -= total_promo_price
 
+  params['total_promo_price'] = int(total_promo_price)
+  params['total_final_price'] = int(total_final_price)
   
-  
-  return Response(promo_result)
+  return Response(params)
