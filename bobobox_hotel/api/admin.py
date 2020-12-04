@@ -1,12 +1,12 @@
 from django.contrib import admin
 
-from .models import Hotel, RoomType, Room, Price, Reservation, Stay, StayRoom
+from .models import Hotel, RoomType, Room, Price, Reservation, Stay, StayRoom, Promo, PromoRule
 
 admin.site.site_header = "Bobobox Admin"
 admin.site.site_title = "Bobobox Admin Area"
 admin.site.index_title = "Welcome to Bobobox admin area"
 
-# MODEL ADMIN
+# MODEL ADMIN -------------------------------------------------------------------------------
 # Base Hotel
 
 class HotelAdmin(admin.ModelAdmin):
@@ -27,8 +27,8 @@ class PriceAdmin(admin.ModelAdmin):
   list_display = ('room_type_id', 'price', 'date',)
   fields = ('room_type_id', 'price', 'date',)
 
-# Reservation
 
+# Reservation
 
 class StayInLine(admin.TabularInline):
     model = Stay
@@ -41,8 +41,8 @@ class StayRoomInLine(admin.TabularInline):
 
 
 class ReservationAdmin(admin.ModelAdmin):
-  list_display = ('customer_name', 'hotel_id', 'checkin_date', 'checkout_date', 'booked_room_count',)
-  fields = ('customer_name', 'hotel_id', 'checkin_date', 'checkout_date',)
+  list_display = ('customer_name', 'hotel_id', 'checkin_date', 'checkout_date', 'reserve_date', 'promo_id', 'booked_room_count',)
+  fields = ('customer_name', 'hotel_id', 'checkin_date', 'checkout_date', 'reserve_date', 'promo_id',)
   inlines = [StayInLine]
 
 
@@ -57,7 +57,27 @@ class StayRoomAdmin(admin.ModelAdmin):
   fields = ('stay_id', 'room_id', 'date',)
 
 
-# REGISTRATION
+# Promo 
+
+class PromoRuleAdmin(admin.ModelAdmin):
+  list_display = ('promo_id', 'min_nights', 'min_rooms','checkin_day', 'booking_day', 'booking_hour_start','booking_hour_end',)
+  fields = ('promo_id', 'min_nights', 'min_rooms','checkin_day', 'booking_day', 'booking_hour_start','booking_hour_end',)
+
+
+class PromoRuleInLine(admin.TabularInline):
+  model = PromoRule
+  extra = 0
+
+
+class PromoAdmin(admin.ModelAdmin):
+  list_display = ('name', 'value', 'promo_type', 'quota', 'promo_date_start', 'promo_date_end', 'stay_date_start', 'stay_date_end',)
+  fields = ('name', 'value', 'promo_type', 'quota', 'promo_date_start', 'promo_date_end', 'stay_date_start', 'stay_date_end',)
+  inlines = [PromoRuleInLine]
+
+
+
+
+# REGISTRATION -------------------------------------------------------------------------------
 # Base Hotel
 admin.site.register(Hotel, HotelAdmin)
 admin.site.register(RoomType, RoomTypeAdmin)
@@ -68,3 +88,7 @@ admin.site.register(Price, PriceAdmin)
 admin.site.register(Stay, StayAdmin)
 admin.site.register(StayRoom, StayRoomAdmin)
 admin.site.register(Reservation, ReservationAdmin)
+
+# Promo
+admin.site.register(Promo, PromoAdmin)
+admin.site.register(PromoRule, PromoRuleAdmin)

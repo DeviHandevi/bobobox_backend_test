@@ -2,9 +2,10 @@ from django.shortcuts import render
 
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from .models import Hotel, RoomType, Room, Price, Reservation, Stay, StayRoom
+from .models import Hotel, RoomType, Room, Price, Reservation, Stay, StayRoom, Promo, PromoRule
 
 from datetime import datetime, timedelta
+import json, copy
 
 # Index Page
 @api_view(['GET'])
@@ -80,3 +81,91 @@ def roomsearch(request):
   }
   return Response(search_result)
   
+  
+# Promo Application
+@api_view(['GET'])
+def applypromo(request):
+  # Prepare query parameters
+  params_json = request.data.get('params', False)
+  params = json.loads(params_json) if params_json else False
+  promo_result = copy.deepcopy(params)
+
+  if not params:
+    return Response({'error': 'Parameters not found'})
+
+  # Get the promo
+  promo_id = params.get('promo_id', 0)
+  try:
+    promo = Promo.objects.get(pk=promo_id)
+  except Promo.DoesNotExist:
+    return Response({'error': 'Promo not found',})
+
+  # Get promo rules
+  promo_rules = PromoRule.objects.filter(promo_id=promo_id)
+
+  current_datetime = datetime.now()
+  current_date = current_datetime.date()
+  current_time = current_datetime.time()
+  # Validate the request date to the promo date start and end    
+  if current_date < promo.promo_date_start:
+    return Response({'error': 'Promo has not started yet',})
+  elif current_date > promo.promo_date_end:
+    return Response({'error': 'Promo has finished',})
+  
+  # Validate the booking to the rules
+  is_promo_valid_for_booking = False
+  rooms = params.get('rooms', [])
+  num_of_rooms_booked = len(rooms)
+  for promo_rule in promo_rules:
+    # Minimal rooms rule
+    if num_of_rooms_booked < promo_rule.min_rooms:
+      continue
+    # Minimal nights rule
+    nights_booked = len(rooms[0].get('price', []))
+    if nights_booked < promo_rule.min_nights:
+      continue
+    # Booking day rule
+    if int(current_date.strftime("%w")) != promo_rule.booking_day:
+      continue
+    # Booking hour range rule
+    if current_time < promo_rule.booking_hour_start or current_time > promo_rule.booking_hour_end:
+      continue
+    # Checkin day rule
+    for room in rooms:
+      room_date_and_price_list = room.get('price', [])
+      for room_date_and_price in room_date_and_price_list:
+        room_date_and_price['date'] = datetime.strptime(room_date_and_price['date'], '%Y-%m-%d')
+      room_date_and_price_list.sort(key=lambda x: x['date'])  # sorted by date ASC
+      if int(room_date_and_price_list[0]['date'].strftime('%w')) != promo_rule.checkin_day:
+        return Response({
+          'num_of_rooms_booked': num_of_rooms_booked,
+          'promo_rule.min_rooms': promo_rule.min_rooms,
+          'nights_booked': nights_booked,
+          'promo_rule.min_nights': promo_rule.min_nights,
+          'current_date': int(current_date.strftime("%w")),
+          'promo_rule.booking_day': promo_rule.booking_day,
+          'current_time': current_time,
+          'promo_rule.booking_hour_start': promo_rule.booking_hour_start,
+          'promo_rule.booking_hour_end': promo_rule.booking_hour_end,
+          'room_date_and_price_list[0]["date"].strftime("%w")': int(room_date_and_price_list[0]['date'].strftime("%w")),
+          'promo_rule.checkin_day': promo_rule.checkin_day,
+        })
+        continue
+    # If all valid to rule
+    is_promo_valid_for_booking = True
+    break
+  
+  # If no valid rules, return error
+  if not is_promo_valid_for_booking:
+    return Response({'error': 'No promo rule valid for this request.',})
+  
+  # Check if the quota is available
+  
+
+  # Count discounts
+  
+   
+
+  
+  
+  return Response(promo_result)

@@ -1,5 +1,7 @@
 from django.db import models
 from django.db.models import Count
+from django.core.validators import MinValueValidator, MaxValueValidator
+from datetime import datetime
 
 # BASE HOTEL
 
@@ -35,6 +37,42 @@ class Price(models.Model):
 
   def __str__(self):
     return self.room_type_id.name + ' ' + str(self.price)
+
+    
+
+# PROMOTION
+
+class Promo(models.Model):
+
+  CURRENCY_TYPE = 1
+  PERCENT_TYPE = 2
+  PROMO_TYPE_CHOICES = [(CURRENCY_TYPE, 'Currency'), (PERCENT_TYPE, 'Percentage'), ]
+
+  name = models.CharField(max_length=50)
+  value = models.IntegerField()
+  promo_type = models.IntegerField(choices=PROMO_TYPE_CHOICES, default=CURRENCY_TYPE)
+  quota = models.IntegerField(default=1, validators=[MinValueValidator(1)])
+  promo_date_start = models.DateField()
+  promo_date_end = models.DateField()
+  stay_date_start = models.DateField()
+  stay_date_end = models.DateField()
+
+  def __str__(self):
+    return self.name + ' - ' + str(self.value) + ' - ' + str(self.promo_type) + ' - ' + str(self.quota)
+    
+
+class PromoRule(models.Model):
+  promo_id = models.ForeignKey(Promo, on_delete=models.PROTECT)
+  min_nights = models.IntegerField(default=1, validators=[MinValueValidator(1)])
+  min_rooms = models.IntegerField(default=1, validators=[MinValueValidator(1)])
+  checkin_day = models.IntegerField(default=0, validators=[MinValueValidator(0), MaxValueValidator(6)])
+  booking_day = models.IntegerField(default=0, validators=[MinValueValidator(0), MaxValueValidator(6)])
+  booking_hour_start = models.TimeField()
+  booking_hour_end = models.TimeField()
+
+  def __str__(self):
+    return self.promo_id.name + ' - ' + str(self.min_nights) + ' - ' + str(self.min_rooms)
+
     
 
 # RESERVATION
@@ -45,6 +83,8 @@ class Reservation(models.Model):
   hotel_id = models.ForeignKey(Hotel, on_delete=models.PROTECT)
   checkin_date = models.DateField()
   checkout_date = models.DateField()
+  reserve_date = models.DateField(default='2020-12-01')
+  promo_id = models.ForeignKey(Promo, on_delete=models.PROTECT, null=True)
 
   def __str__(self):
     return self.customer_name + ' - ' + str(self.checkin_date)
