@@ -193,9 +193,14 @@ def applypromo(request):
   for room in rooms:
     room_date_and_price_list = room.get('price', [])
     for room_date_and_price in room_date_and_price_list:
-      promo_price = (room_date_and_price['price'] * promo.value) / 100 if promo.promo_type == 2 else promo.value
+      if promo.promo_type == 1:  # currency
+        promo_price = promo.value * (room_date_and_price['price'] / params['total_price'])
+      else:  # percentage
+        promo_price = (room_date_and_price['price'] * promo.value) / 100
+      # Making sure that no promo price larger than the price itself
       if promo_price > room_date_and_price['price']:
         promo_price = room_date_and_price['price']
+      # Adding the promo and final price data
       room_date_and_price['promo_price'] = int(promo_price)
       room_date_and_price['final_price'] = int(room_date_and_price['price'] - promo_price)
       total_promo_price += promo_price
@@ -203,6 +208,7 @@ def applypromo(request):
       room_date_and_price['date'] = room_date_and_price['date'].strftime('%Y-%m-%d')
   total_final_price -= total_promo_price
 
+  # Add total promo and final price
   params['total_promo_price'] = int(total_promo_price)
   params['total_final_price'] = int(total_final_price)
   
