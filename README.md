@@ -32,6 +32,7 @@ Expected inputs:
 - checkout_date: date (YYYY-MM-DD)
 - room_qty: int
 - room_type_id: int
+
 Example output:
 ```json
 {
@@ -114,6 +115,7 @@ Expected inputs:
 }
 
 ```
+
 Example output:
 ```json
 {
