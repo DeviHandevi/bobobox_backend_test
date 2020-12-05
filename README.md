@@ -26,7 +26,7 @@ python manage.py runserver
 Read the documentation in the "Documentation.pdf", you can find it in the root folder.
 
 ### Postman Collections
-You can find the postman collections in the "Postman Collection" folder in the root folder.
+You can find the postman collections in the "Postman Collections" folder in the root folder.
 
 ## URLs
 ### Admin
