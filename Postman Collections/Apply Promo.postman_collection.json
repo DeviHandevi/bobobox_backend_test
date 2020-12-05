@@ -1,0 +1,62 @@
+{
+	"info": {
+		"_postman_id": "599ff503-a703-4178-b9af-a58fccda6ee6",
+		"name": "Apply Promo",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Case 1",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "checkin_date",
+							"value": "2020-01-10",
+							"type": "text"
+						},
+						{
+							"key": "checkout_date",
+							"value": "2020-01-12",
+							"type": "text"
+						},
+						{
+							"key": "room_qty",
+							"value": "3",
+							"type": "text"
+						},
+						{
+							"key": "room_type_id",
+							"value": "3",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8000/api/roomsearch/",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"roomsearch",
+						""
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"protocolProfileBehavior": {}
+}

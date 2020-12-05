@@ -21,12 +21,20 @@ python manage.py createsuperuser
 python manage.py runserver
 ```
 
+## Files
+### Documentation
+Read the documentation in the "Documentation.pdf", you can find it in the root folder.
+
+### Postman Collections
+You can find the postman collections in the "Postman Collection" folder in the root folder.
+
 ## URLs
 ### Admin
 `http://127.0.0.1:8000/admin` (adjust the URL if the IP address or the port is changed)
 To create, read, update, and delete (CRUD) data.
 ### Hotel Room Search
 `http://127.0.0.1:8000/api/roomsearch/`
+
 Expected inputs:
 - checkin_date: date (YYYY-MM-DD)
 - checkout_date: date (YYYY-MM-DD)
@@ -76,6 +84,7 @@ Example output:
 
 ### Promotion Service
 `http://127.0.0.1:8000/api/applypromo/`
+
 Expected inputs:
 - params: string (JSON)
 ```json
