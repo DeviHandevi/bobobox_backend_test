@@ -23,7 +23,7 @@ def roomsearch(request):
   # Prepare query parameters
   q_checkin_date_str = request.data.get('checkin_date', 0)
   q_checkout_date_str = request.data.get('checkout_date', 0)
-  q_room_qty = request.data.get('room_qty', 0)
+  q_room_qty = int(request.data.get('room_qty', 0))
   q_room_type_id = request.data.get('room_type_id', 0)
 
   # Get rooms with the specified room_type_id
@@ -40,9 +40,8 @@ def roomsearch(request):
   checkin_date = datetime.strptime(q_checkin_date_str, '%Y-%m-%d')
   checkout_date = datetime.strptime(q_checkout_date_str, '%Y-%m-%d')
   day_delta = timedelta(days=1)
-  # Set min_total_price
-  min_total_price = -1
   # Iterate all available rooms to get the prices and minimum total price
+  room_total_prices = []
   for available_room in available_rooms_objs:
     # Get all prices for each date (last price updated for each date)
     room_prices = []
@@ -65,9 +64,11 @@ def roomsearch(request):
       "price": room_prices,
     })
 
-    # Get minimal of total_prices
-    if (min_total_price == -1) or (room_total_price < min_total_price):
-        min_total_price = room_total_price
+    room_total_prices.append(room_total_price)
+
+  # Get minimal of total_prices with the number of room qty requested
+  room_total_prices.sort()
+  min_total_price = sum(room_total_prices[:q_room_qty])
 
   num_of_available_room = len(available_rooms)
   search_result = {
