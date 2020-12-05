@@ -84,7 +84,7 @@ class Reservation(models.Model):
   checkin_date = models.DateField()
   checkout_date = models.DateField()
   reserve_date = models.DateField(default='2020-12-01')
-  promo_id = models.ForeignKey(Promo, on_delete=models.PROTECT, null=True)
+  promo_id = models.ForeignKey(Promo, on_delete=models.PROTECT, null=True, blank=True)
 
   def __str__(self):
     return self.customer_name + ' - ' + str(self.checkin_date)
